@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 const twilio = require("twilio");
 
-// const twilioClient = twilio(
-//   "AC66491e329ebd72deaa4d9d209336beba",
-//   "37885081d742674de2cd960d46279581"
-// );
+const twilioClient = twilio(
+  "AC66491e329ebd72deaa4d9d209336beba",
+  "37885081d742674de2cd960d46279581"
+);
 
 const User = require("./model/model");
 
