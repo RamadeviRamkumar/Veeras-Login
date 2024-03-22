@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const twilio = require("twilio");
+// const twilio = require("twilio");
 
 // const twilioClient = twilio(
 //   "AC66491e329ebd72deaa4d9d209336beba",
@@ -30,7 +30,7 @@ async function saveOTPToDatabase(phoneNumber, otp, location) {
     const updateFields = { otp };
 
     if (location) {
-      // Convert the location to an array of numbers
+      
       const coordinates = location.map((coord) =>
         parseFloat(coord.coordinates[0])
       );
