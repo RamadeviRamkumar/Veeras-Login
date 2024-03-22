@@ -29,7 +29,7 @@ const options = {
         url: "http://localhost:4000/"
       },
       {
-        url: "https://veera-login-1.onrender.com"
+        url: "https://veeras-login.onrender.com"
       }
     ]
   },
