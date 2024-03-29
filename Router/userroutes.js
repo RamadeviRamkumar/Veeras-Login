@@ -10,7 +10,6 @@ const axios = require("axios");
 const qrcode = require("qrcode");
 require("dotenv").config();
 
-
 router.use(bodyParser.json());
 router.use(express.json());
 
@@ -32,7 +31,7 @@ function sendOTP(phoneNumber, otp) {
   return client.messages
     .create({
       body: `Your OTP is: ${otp}`,
-      from: twilioPhoneNumber,
+      from: +15412637006,
       to: phoneNumber,
     })
     .then((message) => {
@@ -198,59 +197,59 @@ module.exports = (io) => {
   router.post("/login", async (req, res) => {
     try {
       const { phoneNumber, otp } = req.body;
-  
+
       if (!phoneNumber || !otp) {
         return res
           .status(400)
           .json({ error: "Phone number and OTP are required" });
       }
-  
+
       if (phoneNumbers[phoneNumber] && phoneNumbers[phoneNumber] == otp) {
         delete phoneNumbers[phoneNumber];
-  
+
         let user = await User.findOne({ phoneNumber });
-  
+
         if (!user) {
           user = new User({
             phoneNumber: phoneNumber,
           });
           console.log("New user created:", user);
         }
-  
+
         if (user.loggedIn) {
           return res.status(401).json({ error: "User is already logged in" });
         }
-  
+
         // Set lastLoginTime when user logs in
         user.lastLoginTime = new Date();
         await user.save();
-  
+
         const secretKey = generateRandomString();
         const sessionId = generateRandomString();
         const userId = user._id;
         user.sessionId = sessionId;
         user.secretKey = secretKey;
         user.userId = userId;
-  
+
         console.log("User details before saving:", user);
-  
+
         await user.save();
-  
+
         console.log("User details after saving:", user);
-  
+
         const qrCodeData = {
           secretKey,
           sessionId,
           userId,
         };
-  
+
         const qrCodeDataURL = await generateQRCode(qrCodeData);
-  
+
         io.emit("userLoggedIn", {
           userId: user._id,
           phoneNumber: user.phoneNumber,
         });
-  
+
         res.json({
           success: true,
           message: "Login successful",
@@ -486,147 +485,182 @@ module.exports = (io) => {
     }
   });
 
-/**
- * @swagger
- * /api/location:
- *   post:
- *     summary: Store user location details
- *     description: Endpoint to store user location details.
- *     tags:
- *       - Location
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               ipAddress:
- *                 type: string
- *               latitude:
- *                 type: number
- *               longitude:
- *                 type: number
- *               countryName:
- *                 type: string
- *           example:
- *             ipAddress: "127.0.0.1"
- *             latitude: 40.7128
- *             longitude: -74.0060
- *             countryName: "string"
- *     responses:
- *       201:
- *         description: Location details stored successfully
- *       400:
- *         description: Bad request, missing or invalid parameters
- *       500:
- *         description: Internal Server Error
- */
-router.post("/location", async (req, res) => {
-  try {
-    const { ipAddress, latitude, longitude, countryName } = req.body;
+  /**
+   * @swagger
+   * /api/location:
+   *   post:
+   *     summary: Store user location details
+   *     description: Endpoint to store user location details.
+   *     tags:
+   *       - Location
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               ipAddress:
+   *                 type: string
+   *               latitude:
+   *                 type: number
+   *               longitude:
+   *                 type: number
+   *               countryName:
+   *                 type: string
+   *           example:
+   *             ipAddress: "127.0.0.1"
+   *             latitude: 40.7128
+   *             longitude: -74.0060
+   *             countryName: "string"
+   *     responses:
+   *       201:
+   *         description: Location details stored successfully
+   *       400:
+   *         description: Bad request, missing or invalid parameters
+   *       500:
+   *         description: Internal Server Error
+   */
+  router.post("/location", async (req, res) => {
+    try {
+      const { ipAddress, latitude, longitude, countryName } = req.body;
 
-    const newLocation = new Location({
-      ipAddress,
-      latitude,
-      longitude,
-      countryName,
-    });
+      const newLocation = new Location({
+        ipAddress,
+        latitude,
+        longitude,
+        countryName,
+      });
 
-    await newLocation.save();
+      await newLocation.save();
 
-    res.status(201).json({ message: "Location details stored successfully" });
-  } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ error: "Internal Server Error", details: error.message });
-  }
-});
-
+      res.status(201).json({ message: "Location details stored successfully" });
+    } catch (error) {
+      console.error(error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", details: error.message });
+    }
+  });
 
   /**
- * @swagger
- * /api/logout:
- *   post:
- *     summary: Logout a user
- *     description: Logout a user by updating their session status
- *     tags:
- *       - Authentication
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: string
- *                 description: The ID of the user to logout
- *     responses:
- *       200:
- *         description: Logout successful
- *         content:
- *           application/json:
- *             example:
- *               success: true
- *               message: Logout successful
- *       401:
- *         description: Session expired or invalid user
- *         content:
- *           application/json:
- *             example:
- *               error: Session expired. Please log in again.
- *       404:
- *         description: User not found
- *         content:
- *           application/json:
- *             example:
- *               error: User not found
- *       500:
- *         description: Internal Server Error
- *         content:
- *           application/json:
- *             example:
- *               error: Internal Server Error
- */
+   * @swagger
+   * /api/logout:
+   *   post:
+   *     summary: Log out user and set loggedIn status to false.
+   *     description: Logs out the user by setting the user's loggedIn status to false if the session is still valid.
+   *     tags:
+   *       - Authentication
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               userId:
+   *                 type: string
+   *                 description: The ID of the user to log out.
+   *             required:
+   *               - userId
+   *     responses:
+   *       '200':
+   *         description: OK. Logout successful.
+   *       '401':
+   *         description: Unauthorized. Session expired or user not found.
+   *       '500':
+   *         description: Internal Server Error.
+   */
   router.post("/logout", async (req, res) => {
     try {
       const { userId } = req.body;
-  
+
       const user = await User.findById(userId);
-  
+
       if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        return res.status(401).json({ error: "User not found" });
       }
-  
-      const sessionTimeoutMinutes = 5;
+
+      const sessionTimeoutMinutes = 1440; // 24 hours
       const currentTime = new Date();
       const lastLoginTime = user.lastLoginTime;
-  
+
       if (
         lastLoginTime &&
         currentTime - lastLoginTime > sessionTimeoutMinutes * 60 * 1000
       ) {
-        
         user.loggedIn = false;
         await user.save();
         return res
           .status(401)
           .json({ error: "Session expired. Please log in again." });
       }
-  
-      
+
       user.loggedIn = false;
       await user.save();
-  
+
       res.json({ success: true, message: "Logout successful" });
     } catch (error) {
       console.error("Error in logout:", error.message);
       res.status(500).json({ error: "Internal Server Error" });
     }
   });
-  
+
+  /**
+   * @swagger
+   * /api/checkSession/{sessionId}:
+   *   get:
+   *     summary: Check session expiry.
+   *     description: Check if the session with the provided session ID has expired or not.
+   *     parameters:
+   *       - in: path
+   *         name: sessionId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The session ID to check.
+   *     responses:
+   *       '200':
+   *         description: OK. Session status returned successfully.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 expired:
+   *                   type: boolean
+   *                   description: Indicates if the session has expired or not.
+   *                 message:
+   *                   type: string
+   *                   description: Message indicating the status of the session.
+   *       '404':
+   *         description: Session not found.
+   *       '500':
+   *         description: Internal server error.
+   */
+  router.get("/checkSession/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+
+      const session = await User.findOne({ sessionId: sessionId });
+
+      if (!session) {
+        return res.status(404).json({ error: "Session not found" });
+      }
+
+      const sessionTimeoutMinutes = 1440; // 24 hours
+      const currentTime = new Date();
+
+      if (currentTime - session.createdAt > sessionTimeoutMinutes * 60 * 1000) {
+        return res.json({ expired: true, message: "Session expired" });
+      } else {
+        return res.json({ expired: false, message: "Session still valid" });
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   /**
    * @swagger
