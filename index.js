@@ -55,7 +55,7 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("A user connected on WebSocket");
 
-  socket.on("Token", (data) => {
+  socket.on("Token", async (data) => {
     console.log("Received Token event with data:", data);
 
     if (isValidToken(data.token)) {
@@ -63,6 +63,13 @@ io.on("connection", (socket) => {
         success: true,
         message: "Token received successfully",
       });
+
+      try {
+        await Token.findOneAndDelete({ token: data.token });
+        console.log("Token removed:", data.token);
+      } catch (error) {
+        console.error("Error removing token:", error);
+      }
     } else {
       socket.emit("TokenResponse", {
         success: false,
@@ -76,13 +83,10 @@ io.on("connection", (socket) => {
   });
 });
 
-function isValidToken(token) {
-  return token !== undefined && token !== null && token.trim() !== "";
-}
 
 
 // MongoDB connection
-mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongodb.url1, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("MongoDB Connected Successfully");
   })
