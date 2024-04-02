@@ -3,15 +3,16 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
-const {Server} = require("socket.io");
+const { Server } = require("socket.io");
 const apiRoutes = require("./Router/userroutes.js");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const mongodb = require("./config/mongodb.js");
+const { isValidToken } = require('./utils.js'); 
 
 const app = express();
 
-// Initialize activeQRCodes properly
+
 const activeQRCodes = new Map();
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -58,19 +59,24 @@ io.on("connection", (socket) => {
   socket.on("Token", async (data) => {
     console.log("Received Token event with data:", data);
 
+    // Check if the token is valid
     if (isValidToken(data.token)) {
+      // Emit a success message
       socket.emit("TokenResponse", {
         success: true,
         message: "Token received successfully",
       });
 
       try {
+        // Remove the token from the database
         await Token.findOneAndDelete({ token: data.token });
         console.log("Token removed:", data.token);
       } catch (error) {
         console.error("Error removing token:", error);
+        // Handle error if token removal fails
       }
     } else {
+      // Emit an error message for invalid token
       socket.emit("TokenResponse", {
         success: false,
         message: "Invalid token",
@@ -82,8 +88,6 @@ io.on("connection", (socket) => {
     console.log("User disconnected from WebSocket");
   });
 });
-
-
 
 // MongoDB connection
 mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
