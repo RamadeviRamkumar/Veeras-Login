@@ -82,7 +82,7 @@ function isValidToken(token) {
 
 
 // MongoDB connection
-mongoose.connect(mongodb.url1, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("MongoDB Connected Successfully");
   })
