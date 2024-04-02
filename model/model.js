@@ -5,26 +5,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
-  // location: {
-  //   type: {
-  //     type: String,
-  //     enum: ["Point"],
-  //     required: true,
-  //   },
-  //   coordinates: {
-  //     type: [Number],
-  //     required: true,
-  //     default: [0, 0],
-  //   },
-  // },
-  // deviceId: {
-  //   type: String,
-  //   default: null,
-  // },
-  // ipAddress: {
-  //   type: String,
-  //   required: true,
-  // },
   sessionId: {
     type: String,
     default: null,
@@ -37,9 +17,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  // countryName: {
-  //   type: String,
-  // },
   loggedIn: {
     type: Boolean,
     default: false,

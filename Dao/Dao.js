@@ -1,9 +1,9 @@
 
-user_signup = require('../model/model.js');
+User= require('../model/model.js');
 
 exports.Dao_index = function(req,callback)
 {
-    user_signup.get(function (err,user){
+    User.get(function (err,user){
         if (err)
             callback.json({
                 status : "Error",
@@ -21,7 +21,7 @@ exports.Dao_index = function(req,callback)
 exports.Dao_view = function (req,callback) 
 
 {
-    user_signup.find({phoneNumber:req.params.phoneNumber}, function (err,user) 
+    User.find({phoneNumber:req.params.phoneNumber}, function (err,user) 
     {
         if(err)
              callback.send(err)
@@ -36,7 +36,7 @@ exports.Dao_view = function (req,callback)
 
 exports.Dao_update = function (req,callback) 
 {
-    user_Signup.find({phoneNumber:req.params.phoneNumber}, function (err,user)
+    User.find({phoneNumber:req.params.phoneNumber}, function (err,user)
     {
        
         if (err)
@@ -58,7 +58,7 @@ exports.Dao_update = function (req,callback)
 
 exports.Dao_Delete = function (req,callback)
 {
-    user_signup.deleteOne({phoneNumber:req.params.phoneNumber}, function (err,user)
+    User.deleteOne({phoneNumber:req.params.phoneNumber}, function (err,user)
     {
         if (err)
         callback.send(err)

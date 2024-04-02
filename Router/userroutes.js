@@ -9,6 +9,7 @@ const { generateRandomString } = require("../utils");
 const axios = require("axios");
 const qrcode = require("qrcode");
 require("dotenv").config();
+const { v4: uuidv4 } = require('uuid');
 
 router.use(bodyParser.json());
 router.use(express.json());
@@ -661,6 +662,92 @@ module.exports = (io) => {
       res.status(500).json({ error: error.message });
     }
   });
+
+  
+/**
+ * @swagger
+ * /api/generate-token:
+ *   get:
+ *     summary: Generate unique token
+ *     description: Generates a unique token using UUIDv4.
+ *     tags:
+ *       - Token
+ *     responses:
+ *       200:
+ *         description: Unique token generated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               token: "uniqueToken"
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: Internal Server Error
+ */
+router.get("/generate-token", (req, res) => {
+  const uniqueToken = uuidv4();
+  res.json({ token: uniqueToken });
+});
+
+/**
+ * @swagger
+ * /api/token:
+ *   post:
+ *     summary: Validate a token
+ *     description: Validate the provided token.
+ *     tags:
+ *       - Token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: The token to be validated.
+ *     responses:
+ *       200:
+ *         description: Token validation successful
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               message: Token received successfully
+ *       400:
+ *         description: Bad request, missing or invalid token
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: false
+ *               message: Invalid token
+ *       500:
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             example:
+ *               error: Internal Server Error
+ */
+router.post('/token', (req, res) => {
+  const token = req.body.token;
+  if (isValidToken(token)) {
+    res.status(200).json({ success: true, message: "Token received successfully" });
+  } else {
+    res.status(400).json({ success: false, message: "Invalid token" });
+  }
+});
+
+/**
+ * Function to validate the token
+ * @param {string} token - The token to be validated.
+ * @returns {boolean} - Returns true if the token is valid, false otherwise.
+ */
+function isValidToken(token) {
+  return token !== undefined && token !== null && token.trim() !== "";
+}
 
   /**
    * @swagger
