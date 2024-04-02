@@ -1,12 +1,21 @@
 const mongoose = require("mongoose");
-// const twilio = require("twilio");
-
-// const twilioClient = twilio(
-//   "AC66491e329ebd72deaa4d9d209336beba",
-//   "37885081d742674de2cd960d46279581"
-// );
-
 const User = require("./model/model");
+const Token = require("./model/Token");
+
+/**
+ * Function to validate the token
+ * @param {string} token - The token to be validated.
+ * @returns {Promise<boolean>} - Returns a Promise that resolves to true if the token is valid, false otherwise.
+ */
+async function isValidToken(token) {
+  try {
+    const tokenDocument = await Token.findOne({ token });
+    return !!tokenDocument;
+  } catch (error) {
+    console.error("Error validating token:", error);
+    throw new Error("Internal Server Error");
+  }
+}
 
 function generateRandomString(length = 10) {
   const characters =
@@ -67,6 +76,7 @@ async function sendOTP(phoneNumber, otp) {
 }
 
 module.exports = {
+  isValidToken,
   generateRandomString,
   generateOTP,
   saveOTPToDatabase,

@@ -4,11 +4,15 @@ const bodyParser = require("body-parser");
 const twilio = require("twilio");
 const User = require("../model/model");
 const Location = require("../model/Location");
+
 const Controller = require("../controller/controllers");
-const { generateRandomString } = require("../utils");
+const { isValidToken } = require("../utils");
+
 const axios = require("axios");
 const qrcode = require("qrcode");
 require("dotenv").config();
+const Token = require("../model/Token");
+
 const { v4: uuidv4 } = require('uuid');
 
 router.use(bodyParser.json());
@@ -663,33 +667,54 @@ module.exports = (io) => {
     }
   });
 
-  
+/**
+ * @swagger
+ * tags:
+ *   name: Token
+ *   description: Token generation and validation endpoints
+ */
+
 /**
  * @swagger
  * /api/generate-token:
  *   get:
  *     summary: Generate unique token
- *     description: Generates a unique token using UUIDv4.
- *     tags:
- *       - Token
+ *     description: Generates a unique token using UUIDv4 and stores it in the database.
+ *     tags: [Token]
  *     responses:
  *       200:
- *         description: Unique token generated successfully
+ *         description: Unique token generated and stored successfully
  *         content:
  *           application/json:
- *             example:
- *               token: "uniqueToken"
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: The generated unique token
  *       500:
  *         description: Internal Server Error
  *         content:
  *           application/json:
- *             example:
- *               error: Internal Server Error
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
  */
-router.get("/generate-token", (req, res) => {
-  const uniqueToken = uuidv4();
-  res.json({ token: uniqueToken });
+router.get("/generate-token", async (req, res) => {
+  try {
+    const uniqueToken = uuidv4();
+    const tokenDocument = new Token({ token: uniqueToken });
+    await tokenDocument.save();
+    res.status(200).json({ token: uniqueToken });
+  } catch (error) {
+    console.error("Error generating and saving token:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
+
 
 /**
  * @swagger
@@ -731,23 +756,19 @@ router.get("/generate-token", (req, res) => {
  *             example:
  *               error: Internal Server Error
  */
-router.post('/token', (req, res) => {
-  const token = req.body.token;
-  if (isValidToken(token)) {
-    res.status(200).json({ success: true, message: "Token received successfully" });
-  } else {
-    res.status(400).json({ success: false, message: "Invalid token" });
+router.post('/token', async (req, res) => {
+  const { token } = req.body;
+  try {
+    if (await isValidToken(token)) {
+      res.status(200).json({ success: true, message: "Token received successfully" });
+    } else {
+      res.status(400).json({ success: false, message: "Invalid token" });
+    }
+  } catch (error) {
+    console.error("Error validating token:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-/**
- * Function to validate the token
- * @param {string} token - The token to be validated.
- * @returns {boolean} - Returns true if the token is valid, false otherwise.
- */
-function isValidToken(token) {
-  return token !== undefined && token !== null && token.trim() !== "";
-}
 
   /**
    * @swagger
