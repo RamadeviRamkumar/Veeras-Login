@@ -2,15 +2,24 @@ const mongoose = require("mongoose");
 const User = require("./model/model");
 const Token = require("./model/Token");
 
-/**
- * Function to validate the token
- * @param {string} token - The token to be validated.
- * @returns {Promise<boolean>} - Returns a Promise that resolves to true if the token is valid, false otherwise.
- */
 async function isValidToken(token) {
   try {
     const tokenDocument = await Token.findOne({ token });
-    return !!tokenDocument;
+    return !!tokenDocument; // Return true if tokenDocument is not null or undefined
+  } catch (error) {
+    console.error("Error validating token:", error);
+    throw new Error("Internal Server Error");
+  }
+}
+async function isValidToken(token) {
+  try {
+    const tokenDocument = await Token.findOne({ token });
+    if (tokenDocument) {
+      await Token.findOneAndDelete({ token }); // Delete the token from the database
+      return true; // Return true if token exists and is deleted
+    } else {
+      return false; // Return false if token does not exist
+    }
   } catch (error) {
     console.error("Error validating token:", error);
     throw new Error("Internal Server Error");
@@ -39,7 +48,6 @@ async function saveOTPToDatabase(phoneNumber, otp, location) {
     const updateFields = { otp };
 
     if (location) {
-      
       const coordinates = location.map((coord) =>
         parseFloat(coord.coordinates[0])
       );

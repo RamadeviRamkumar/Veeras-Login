@@ -8,10 +8,10 @@ const apiRoutes = require("./Router/userroutes.js");
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const mongodb = require("./config/mongodb.js");
-const { isValidToken } = require('./utils.js'); 
+const Token = require('./model/Token');
+const { generateRandomString, isValidToken } = require('./utils.js'); 
 
 const app = express();
-
 
 const activeQRCodes = new Map();
 
@@ -58,28 +58,24 @@ io.on("connection", (socket) => {
 
   socket.on("Token", async (data) => {
     console.log("Received Token event with data:", data);
-
-    // Check if the token is valid
-    if (isValidToken(data.token)) {
-      // Emit a success message
-      socket.emit("TokenResponse", {
-        success: true,
-        message: "Token received successfully",
-      });
-
-      try {
-        // Remove the token from the database
-        await Token.findOneAndDelete({ token: data.token });
-        console.log("Token removed:", data.token);
-      } catch (error) {
-        console.error("Error removing token:", error);
-        // Handle error if token removal fails
+  
+    try {
+      if (await isValidToken(data.token)) {
+        socket.emit("TokenResponse", {
+          success: true,
+          message: "Token received and deleted successfully",
+        });
+      } else {
+        socket.emit("TokenResponse", {
+          success: false,
+          message: "Invalid token",
+        });
       }
-    } else {
-      // Emit an error message for invalid token
+    } catch (error) {
+      console.error("Error validating token:", error);
       socket.emit("TokenResponse", {
         success: false,
-        message: "Invalid token",
+        message: "Error validating token",
       });
     }
   });
@@ -88,9 +84,8 @@ io.on("connection", (socket) => {
     console.log("User disconnected from WebSocket");
   });
 });
-
 // MongoDB connection
-mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongodb.url1, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("MongoDB Connected Successfully");
   })
@@ -100,7 +95,7 @@ mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true 
 
 // Routes
 app.get("/", (req, res) => res.send("Welcome to Signin Page"));
-app.use("/api", apiRoutes(io, activeQRCodes)); // Pass activeQRCodes to apiRoutes
+app.use("/api", apiRoutes(io, activeQRCodes)); 
 
 // Start the server
 const port = process.env.PORT || 4000;

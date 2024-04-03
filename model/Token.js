@@ -1,5 +1,3 @@
-// token.js (Token model)
-
 const mongoose = require('mongoose');
 
 const tokenSchema = new mongoose.Schema({
