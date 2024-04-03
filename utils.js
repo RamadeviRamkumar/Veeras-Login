@@ -2,6 +2,22 @@ const mongoose = require("mongoose");
 const User = require("./model/model");
 const Token = require("./model/Token");
 
+// /**
+//  * Function to validate the token
+//  * @param {string} token - The token to be validated.
+//  * @returns {Promise<boolean>} - Returns a Promise that resolves to true if the token is valid, false otherwise.
+//  */
+// async function isValidToken(token) {
+//   try {
+//     const tokenDocument = await Token.findOne({ token });
+//    console.log("Data >>>> ", tokenDocument)
+//     return tokenDocument?.token ? true : false ;
+//   } catch (error) {
+//     console.error("Error validating token:", error);
+//     throw new Error("Internal Server Error");
+//   }
+// }
+
 async function isValidToken(token) {
   try {
     const tokenDocument = await Token.findOne({ token });
