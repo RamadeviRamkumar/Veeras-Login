@@ -8,6 +8,9 @@ const qr = require('qrcode');
 const crypto = require('crypto');
 const Controller = require("../controller/controllers");
 const { isValidToken } = require("../utils");
+const QRCode = require('../model/qrcode');
+
+// Then you can use QRCode to interact with your MongoDB database
 
 const axios = require("axios");
 const qrcode = require("qrcode");
@@ -780,39 +783,48 @@ function generateToken() {
 
 // Generate QR code with a unique channel name
 /**
-* @swagger
-* /api/generateQR:
-*   get:
-*     summary: Generate QR code with a unique channel name
-*     description: Generates a QR code with a unique channel name combining a random token and timestamp.
-*     responses:
-*       200:
-*         description: Successful response. Returns the channel name and QR code URL.
-*         content:
-*           application/json:
-*             schema:
-*               type: object
-*               properties:
-*                 channelName:
-*                   type: string
-*                   description: The unique channel name generated.
-*                 qrCodeUrl:
-*                   type: string
-*                   format: url
-*                   description: The URL to the generated QR code.
-*/
-router.get('/generateQR', (req, res) => {
+ * @swagger
+ * /api/generateQR:
+ *   get:
+ *     summary: Generate QR code with a unique channel name
+ *     description: Generates a QR code with a unique channel name combining a random token and timestamp.
+ *     responses:
+ *       200:
+ *         description: Successful response. Returns the channel name and QR code URL.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 channelName:
+ *                   type: string
+ *                   description: The unique channel name generated.
+ *                 qrCodeUrl:
+ *                   type: string
+ *                   format: url
+ *                   description: The URL to the generated QR code.
+ */
+router.get('/generateQR', async (req, res) => {
   const token = generateToken(); // Generate a random token
   const timestamp = Date.now(); // Get current timestamp
   const channelName = `${token}-${timestamp}`; // Combine token and timestamp to create a unique channel name
 
-  qr.toDataURL(channelName, (err, url) => {
-      if (err) {
-          console.error(err);
-          res.status(500).json({ error: 'Error generating QR code' });
-      } else {
-          res.json({ channelName, qrCodeUrl: url }); // Send channel name and QR code URL in the response
+  qr.toDataURL(channelName, async (err, url) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error generating QR code' });
+    } else {
+      try {
+        // Create a new document with the generated channel name and QR code URL
+        const qrCode = new QRCode({ channelName, qrCodeUrl: url });
+        // Save the document to the database
+        await qrCode.save();
+        res.json({ channelName, qrCodeUrl: url }); // Send channel name and QR code URL in the response
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error saving data to database' });
       }
+    }
   });
 });
 
