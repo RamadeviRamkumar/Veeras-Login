@@ -4,7 +4,8 @@ const bodyParser = require("body-parser");
 const twilio = require("twilio");
 const User = require("../model/model");
 const Location = require("../model/Location");
-
+const qr = require('qrcode');
+const crypto = require('crypto');
 const Controller = require("../controller/controllers");
 const { isValidToken } = require("../utils");
 
@@ -768,6 +769,51 @@ router.post('/token', async (req, res) => {
     console.error("Error validating token:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+
+
+// Function to generate a random token
+function generateToken() {
+  return crypto.randomBytes(20).toString('hex');
+}
+
+// Generate QR code with a unique channel name
+/**
+* @swagger
+* /api/generateQR:
+*   get:
+*     summary: Generate QR code with a unique channel name
+*     description: Generates a QR code with a unique channel name combining a random token and timestamp.
+*     responses:
+*       200:
+*         description: Successful response. Returns the channel name and QR code URL.
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 channelName:
+*                   type: string
+*                   description: The unique channel name generated.
+*                 qrCodeUrl:
+*                   type: string
+*                   format: url
+*                   description: The URL to the generated QR code.
+*/
+router.get('/generateQR', (req, res) => {
+  const token = generateToken(); // Generate a random token
+  const timestamp = Date.now(); // Get current timestamp
+  const channelName = `${token}-${timestamp}`; // Combine token and timestamp to create a unique channel name
+
+  qr.toDataURL(channelName, (err, url) => {
+      if (err) {
+          console.error(err);
+          res.status(500).json({ error: 'Error generating QR code' });
+      } else {
+          res.json({ channelName, qrCodeUrl: url }); // Send channel name and QR code URL in the response
+      }
+  });
 });
 
   /**
