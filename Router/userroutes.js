@@ -805,9 +805,9 @@ function generateToken() {
  *                   description: The URL to the generated QR code.
  */
 router.get('/generateQR', async (req, res) => {
-  const token = generateToken(); // Generate a random token
-  const timestamp = Date.now(); // Get current timestamp
-  const channelName = `${token}-${timestamp}`; // Combine token and timestamp to create a unique channel name
+  const token = generateToken(); 
+  const timestamp = Date.now(); 
+  const channelName = `${token}-${timestamp}`; 
 
   qr.toDataURL(channelName, async (err, url) => {
     if (err) {
@@ -815,11 +815,11 @@ router.get('/generateQR', async (req, res) => {
       res.status(500).json({ error: 'Error generating QR code' });
     } else {
       try {
-        // Create a new document with the generated channel name and QR code URL
+        
         const qrCode = new QRCode({ channelName, qrCodeUrl: url });
-        // Save the document to the database
+        
         await qrCode.save();
-        res.json({ channelName, qrCodeUrl: url }); // Send channel name and QR code URL in the response
+        res.json({ channelName, qrCodeUrl: url }); 
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error saving data to database' });
