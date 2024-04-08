@@ -8,7 +8,7 @@
   "host": "veeras-login.onrender.com",
   "basePath": "/",
   "schemes": [
-    "http,https"
+    "http"
   ],
   "paths": {
     "/": {
