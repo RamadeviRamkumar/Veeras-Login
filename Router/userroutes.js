@@ -386,6 +386,27 @@ module.exports = (io) => {
     return crypto.randomBytes(20).toString('hex');
   }
 
+  const token = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
+  
+  const tokens = {};
+  
+  router.get("/auth/token", async (req, res) => {
+    try {
+      const token = token();
+  
+      await Token.create({ token, isAuthenticated: false });
+  
+      const qrImage = await qrCode.toDataURL(token);
+  
+      res.json({ token, qrImage });
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
   router.route("/user").get(Controller.index);
   router
       .route("/user/:number")
