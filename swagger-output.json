@@ -6,7 +6,7 @@
     "version": "1.0.0"
   },
   "host": "https://veeras-login.onrender.com",
-  "basePath": "/",
+  "basePath": "/dev",
   "schemes": [
     "http"
   ],
@@ -275,6 +275,19 @@
         }
       }
     },
+    "/api/generateQR": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/generate-token": {
       "get": {
         "description": "",
@@ -311,19 +324,6 @@
           },
           "400": {
             "description": "Bad Request"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
-    "/api/generateQR": {
-      "get": {
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
           },
           "500": {
             "description": "Internal Server Error"
