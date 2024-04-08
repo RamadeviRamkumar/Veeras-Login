@@ -31,6 +31,7 @@
     "multer": "^1.4.5-lts.1",
     "node-record-lpcm16": "^1.0.1",
     "nodemon": "^3.0.1",
+    "qr-image": "^3.2.0",
     "qrcode": "^1.5.3",
     "qrcode-reader": "^1.0.4",
     "react-qr-reader": "^3.0.0-beta-1",
@@ -48,5 +49,8 @@
   "optionalDependencies": {
     "bufferutil": "^4.0.8",
     "utf-8-validate": "^6.0.3"
+  },
+  "devDependencies": {
+    "swagger-autogen": "^2.23.7"
   }
 }

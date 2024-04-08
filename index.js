@@ -5,11 +5,10 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const apiRoutes = require("./Router/userroutes.js");
-const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const mongodb = require("./config/mongodb.js");
 const Token = require('./model/Token');
-const { generateRandomString, isValidToken } = require('./utils.js'); 
+const { isValidToken } = require('./utils.js'); 
 
 const app = express();
 
@@ -40,9 +39,9 @@ const options = {
   apis: ['./Router/userroutes.js'],
 };
 
-const swaggerspecs = swaggerJsdoc(options);
+const swaggerDocument = require('./swagger-output.json');
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerspecs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Socket.IO setup
 const server = http.createServer(app);
@@ -84,6 +83,7 @@ io.on("connection", (socket) => {
     console.log("User disconnected from WebSocket");
   });
 });
+
 // MongoDB connection
 mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
