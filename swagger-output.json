@@ -6,9 +6,9 @@
     "version": "1.0.0"
   },
   "host": "veeras-login.onrender.com",
-  "basePath": "/dev",
+  "basePath": "/",
   "schemes": [
-    "http"
+    "http,https"
   ],
   "paths": {
     "/": {
