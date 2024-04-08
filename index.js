@@ -29,7 +29,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:4000/"
+        url1: "http://localhost:4000/"
       },
       {
         url: "https://veeras-login.onrender.com"
@@ -85,7 +85,7 @@ io.on("connection", (socket) => {
 });
 
 // MongoDB connection
-mongoose.connect(mongodb.url, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongodb.url1, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log("MongoDB Connected Successfully");
   })

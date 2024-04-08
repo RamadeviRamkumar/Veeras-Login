@@ -4,7 +4,7 @@ const doc = {
     title: "Veeras-Education-App",
     description: "Version 2.0"
   },
-  host: "https://veeras-login.onrender.com",
+  host: "veeras-login.onrender.com",
   basePath:"/dev",
 };
 
