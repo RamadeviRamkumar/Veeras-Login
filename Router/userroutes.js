@@ -386,15 +386,15 @@ module.exports = (io) => {
     return crypto.randomBytes(20).toString('hex');
   }
 
-  const token = () => {
-    return Math.random().toString(36).substring(2, 10);
-  };
+  // const token = () => {
+  //   return Math.random().toString(36).substring(2, 10);
+  // };
   
   const tokens = {};
   
   router.get("/auth/token", async (req, res) => {
     try {
-      const token = token();
+      const token = generateToken();
   
       await Token.create({ token, isAuthenticated: false });
   
