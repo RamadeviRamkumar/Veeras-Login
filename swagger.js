@@ -5,7 +5,7 @@ const doc = {
     description: "Version 2.0"
   },
   host: "https://veeras-login.onrender.com",
- schemes:['http'],
+  basePath:"/dev",
 };
 
 const outputFile = "./swagger-output.json";
