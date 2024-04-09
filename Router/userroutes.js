@@ -49,6 +49,13 @@ function sendOTP(phoneNumber, otp) {
     });
 }
 
+function generateSessionDetails() {
+  return {
+    sessionId: uuidv4(),
+    secretKey: uuidv4()
+  };
+}
+
 router.get("/", function (req, res) {
   res.json({
     status: "API Works",
@@ -100,58 +107,43 @@ module.exports = (io) => {
   router.post("/login", async (req, res) => {
     try {
       const { phoneNumber, otp } = req.body;
-
+  
       if (!phoneNumber || !otp) {
-        return res
-          .status(400)
-          .json({ error: "Phone number and OTP are required" });
+        return res.status(400).json({ error: "Phone number and OTP are required" });
       }
-
+  
       if (phoneNumbers[phoneNumber] && phoneNumbers[phoneNumber] == otp) {
         delete phoneNumbers[phoneNumber];
-
+  
         let user = await User.findOne({ phoneNumber });
-
+  
         if (!user) {
           user = new User({
             phoneNumber: phoneNumber,
           });
           console.log("New user created:", user);
         }
-
+  
         if (user.loggedIn) {
           return res.status(401).json({ error: "User is already logged in" });
         }
-
+  
         user.lastLoginTime = new Date();
         await user.save();
-
-        const secretKey = generateRandomString();
-        const sessionId = generateRandomString();
-        const userId = user._id;
+  
+        const { sessionId, secretKey } = generateSessionDetails();
+  
         user.sessionId = sessionId;
         user.secretKey = secretKey;
-        user.userId = userId;
-
-        console.log("User details before saving:", user);
-
+  
         await user.save();
-
-        console.log("User details after saving:", user);
-
-        const qrCodeData = {
-          secretKey,
-          sessionId,
-          userId,
+  
+        const loginDetails = {
+          loginTime: user.lastLoginTime,
+          sessionId: user.sessionId,
+          secretKey: user.secretKey
         };
-
-        const qrCodeDataURL = await generateQRCode(qrCodeData);
-
-        io.emit("userLoggedIn", {
-          userId: user._id,
-          phoneNumber: user.phoneNumber,
-        });
-
+  
         res.json({
           success: true,
           message: "Login successful",
@@ -159,20 +151,17 @@ module.exports = (io) => {
             userId: user._id,
             phoneNumber: user.phoneNumber,
           },
-          token: null,
-          qrCodeDataURL,
-          sessionId,
-          secretKey,
+          loginDetails: loginDetails
         });
       } else {
         res.status(401).json({ error: "Invalid OTP" });
       }
     } catch (error) {
       console.error("Error in login:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ error: "Internal Server Error", message: error.message });
     }
   });
-
+  
   async function validateScannedData(secretKey, sessionId, userId) {
     const expectedUser = await User.findOne({ userId, sessionId, secretKey });
     return !!expectedUser;
