@@ -93,15 +93,15 @@ router.post("/send", express.json(), (req, res) => {
     });
 });
 
-async function generateQRCode(qrCodeData) {
-  try {
-    const qrCodeDataURL = await qrcode.toDataURL(JSON.stringify(qrCodeData));
-    return qrCodeDataURL;
-  } catch (error) {
-    console.error("Error generating QR code:", error.message);
-    throw error;
-  }
-}
+// async function generateQRCode(qrCodeData) {
+//   try {
+//     const qrCodeDataURL = await qrcode.toDataURL(JSON.stringify(qrCodeData));
+//     return qrCodeDataURL;
+//   } catch (error) {
+//     console.error("Error generating QR code:", error.message);
+//     throw error;
+//   }
+// }
 
 module.exports = (io) => {
   router.post("/login", async (req, res) => {
@@ -158,6 +158,42 @@ module.exports = (io) => {
       }
     } catch (error) {
       console.error("Error in login:", error);
+      res.status(500).json({ error: "Internal Server Error", message: error.message });
+    }
+  });
+  
+  router.post("/getUserDetails", async (req, res) => {
+    try {
+      const { sessionId } = req.body;
+  
+      if (!sessionId) {
+        return res.status(400).json({ error: "Session ID is required" });
+      }
+  
+      const user = await User.findOne({ sessionId });
+  
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      
+      const userDetails = {
+        userId: user._id,
+        phoneNumber: user.phoneNumber,
+        lastLoginTime: user.lastLoginTime,
+        location: user.location,
+        qrcode: user.qrcode,
+        token: Token.token,
+        
+      };
+  
+      res.json({
+        success: true,
+        message: "User details retrieved successfully",
+        user: userDetails
+      });
+    } catch (error) {
+      console.error("Error in getUserDetails:", error);
       res.status(500).json({ error: "Internal Server Error", message: error.message });
     }
   });
