@@ -4,17 +4,17 @@ const bodyParser = require("body-parser");
 const twilio = require("twilio");
 const User = require("../model/model");
 const Location = require("../model/Location");
-const qr = require('qrcode');
-const qrCode = require('qr-image');
-const crypto = require('crypto');
+const qr = require("qrcode");
+const qrCode = require("qr-image");
+const crypto = require("crypto");
 const Controller = require("../controller/controllers");
 const { isValidToken } = require("../utils");
-const QRCode = require('../model/qrcode');
+const QRCode = require("../model/qrcode");
 const axios = require("axios");
 const qrcode = require("qrcode");
 require("dotenv").config();
 const Token = require("../model/Token");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 router.use(bodyParser.json());
 router.use(express.json());
@@ -52,7 +52,7 @@ function sendOTP(phoneNumber, otp) {
 function generateSessionDetails() {
   return {
     sessionId: uuidv4(),
-    secretKey: uuidv4()
+    secretKey: uuidv4(),
   };
 }
 
@@ -93,57 +93,59 @@ router.post("/send", express.json(), (req, res) => {
     });
 });
 
-// async function generateQRCode(qrCodeData) {
-//   try {
-//     const qrCodeDataURL = await qrcode.toDataURL(JSON.stringify(qrCodeData));
-//     return qrCodeDataURL;
-//   } catch (error) {
-//     console.error("Error generating QR code:", error.message);
-//     throw error;
-//   }
-// }
+async function generateQRCode(qrCodeData) {
+  try {
+    const qrCodeDataURL = await qrcode.toDataURL(JSON.stringify(qrCodeData));
+    return qrCodeDataURL;
+  } catch (error) {
+    console.error("Error generating QR code:", error.message);
+    throw error;
+  }
+}
 
 module.exports = (io) => {
   router.post("/login", async (req, res) => {
     try {
       const { phoneNumber, otp } = req.body;
-  
+
       if (!phoneNumber || !otp) {
-        return res.status(400).json({ error: "Phone number and OTP are required" });
+        return res
+          .status(400)
+          .json({ error: "Phone number and OTP are required" });
       }
-  
+
       if (phoneNumbers[phoneNumber] && phoneNumbers[phoneNumber] == otp) {
         delete phoneNumbers[phoneNumber];
-  
+
         let user = await User.findOne({ phoneNumber });
-  
+
         if (!user) {
           user = new User({
             phoneNumber: phoneNumber,
           });
           console.log("New user created:", user);
         }
-  
+
         if (user.loggedIn) {
           return res.status(401).json({ error: "User is already logged in" });
         }
-  
+
         user.lastLoginTime = new Date();
         await user.save();
-  
+
         const { sessionId, secretKey } = generateSessionDetails();
-  
+
         user.sessionId = sessionId;
         user.secretKey = secretKey;
-  
+
         await user.save();
-  
+
         const loginDetails = {
           loginTime: user.lastLoginTime,
           sessionId: user.sessionId,
-          secretKey: user.secretKey
+          secretKey: user.secretKey,
         };
-  
+
         res.json({
           success: true,
           message: "Login successful",
@@ -151,32 +153,33 @@ module.exports = (io) => {
             userId: user._id,
             phoneNumber: user.phoneNumber,
           },
-          loginDetails: loginDetails
+          loginDetails: loginDetails,
         });
       } else {
         res.status(401).json({ error: "Invalid OTP" });
       }
     } catch (error) {
       console.error("Error in login:", error);
-      res.status(500).json({ error: "Internal Server Error", message: error.message });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", message: error.message });
     }
   });
-  
+
   router.post("/getUserDetails", async (req, res) => {
     try {
       const { sessionId } = req.body;
-  
+
       if (!sessionId) {
         return res.status(400).json({ error: "Session ID is required" });
       }
-  
+
       const user = await User.findOne({ sessionId });
-  
+
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-  
-      
+
       const userDetails = {
         userId: user._id,
         phoneNumber: user.phoneNumber,
@@ -184,20 +187,21 @@ module.exports = (io) => {
         location: user.location,
         qrcode: user.qrcode,
         token: Token.token,
-        
       };
-  
+
       res.json({
         success: true,
         message: "User details retrieved successfully",
-        user: userDetails
+        user: userDetails,
       });
     } catch (error) {
       console.error("Error in getUserDetails:", error);
-      res.status(500).json({ error: "Internal Server Error", message: error.message });
+      res
+        .status(500)
+        .json({ error: "Internal Server Error", message: error.message });
     }
   });
-  
+
   async function validateScannedData(secretKey, sessionId, userId) {
     const expectedUser = await User.findOne({ userId, sessionId, secretKey });
     return !!expectedUser;
@@ -357,25 +361,24 @@ module.exports = (io) => {
     }
   });
 
-  router.get('/generateQR', async (req, res) => {
-    const token = generateToken(); 
-    const timestamp = Date.now(); 
-    const channelName = `${token}-${timestamp}`; 
+  router.get("/generateQR", async (req, res) => {
+    const token = generateToken();
+    const timestamp = Date.now();
+    const channelName = `${token}-${timestamp}`;
 
     qr.toDataURL(channelName, async (err, url) => {
       if (err) {
         console.error(err);
-        res.status(500).json({ error: 'Error generating QR code' });
+        res.status(500).json({ error: "Error generating QR code" });
       } else {
         try {
-          
           const qrCode = new QRCode({ channelName, qrCodeUrl: url });
-          
+
           await qrCode.save();
-          res.json({ channelName, qrCodeUrl: url }); 
+          res.json({ channelName, qrCodeUrl: url });
         } catch (error) {
           console.error(error);
-          res.status(500).json({ error: 'Error saving data to database' });
+          res.status(500).json({ error: "Error saving data to database" });
         }
       }
     });
@@ -393,11 +396,13 @@ module.exports = (io) => {
     }
   });
 
-  router.post('/token', async (req, res) => {
+  router.post("/token", async (req, res) => {
     const { token } = req.body;
     try {
       if (await isValidToken(token)) {
-        res.status(200).json({ success: true, message: "Token received successfully" });
+        res
+          .status(200)
+          .json({ success: true, message: "Token received successfully" });
       } else {
         res.status(400).json({ success: false, message: "Invalid token" });
       }
@@ -407,38 +412,17 @@ module.exports = (io) => {
     }
   });
 
-  function generateToken() {
-    return crypto.randomBytes(20).toString('hex');
-  }
+  const generateToken = () => {
+    return Math.random().toString(36).substring(2, 10);
+  };
 
-  // const token = () => {
-  //   return Math.random().toString(36).substring(2, 10);
-  // };
-  
-  const tokens = {};
-  
-  router.get("/auth/token", async (req, res) => {
-    try {
-      const token = generateToken();
-  
-      await Token.create({ token, isAuthenticated: false });
-  
-      const qrImage = await qrCode.toDataURL(token);
-  
-      res.json({ token, qrImage });
-    } catch (error) {
-      console.error("Error generating QR code:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  });
-  
   router.route("/user").get(Controller.index);
   router
-      .route("/user/:number")
-      .get(Controller.view)
-      .patch(Controller.update)
-      .put(Controller.update)
-      .delete(Controller.Delete);
+    .route("/user/:number")
+    .get(Controller.view)
+    .patch(Controller.update)
+    .put(Controller.update)
+    .delete(Controller.Delete);
 
   return router;
 };
